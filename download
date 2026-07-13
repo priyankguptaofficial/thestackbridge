@@ -1,0 +1,137 @@
+// app/pricing/page.tsx
+"use client";
+
+import { useState } from "react";
+import { Check, Minus } from "lucide-react";
+import { PLANS, COMPARISON_ROWS, TRIAL_COPY, formatPrice } from "@/lib/pricing-data";
+import { ButtonLink } from "@/components/button-link";
+
+export default function PricingPage() {
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+
+  return (
+    <main className="bg-background text-ink min-h-screen">
+      <section className="max-w-6xl mx-auto px-6 pt-20 pb-10 text-center">
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+          Simple pricing, real people behind it
+        </h1>
+        <p className="mt-4 text-muted max-w-2xl mx-auto">
+          Every plan starts with a 7-day free trial. No risk, cancel anytime in
+          that window for a full refund.
+        </p>
+
+        <div className="mt-8 inline-block rounded-lg border border-accent/30 bg-accent/10 px-6 py-3 text-sm text-accent">
+          {TRIAL_COPY}
+        </div>
+
+        <div className="mt-10 inline-flex items-center rounded-full border border-hairline bg-white/5 p-1">
+          <button
+            onClick={() => setBillingCycle("monthly")}
+            className={`px-4 py-1.5 rounded-full text-sm transition ${
+              billingCycle === "monthly" ? "bg-accent text-background" : "text-muted"
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingCycle("annual")}
+            className={`px-4 py-1.5 rounded-full text-sm transition ${
+              billingCycle === "annual" ? "bg-accent text-background" : "text-muted"
+            }`}
+          >
+            Annual <span className="opacity-70">(2 months free)</span>
+          </button>
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4 pb-16">
+        {PLANS.map((plan) => {
+          const price =
+            plan.monthlyPrice === null
+              ? "Custom"
+              : billingCycle === "annual"
+              ? formatPrice(plan.annualPrice)
+              : formatPrice(plan.monthlyPrice);
+          const suffix = plan.monthlyPrice === null ? "pricing" : billingCycle === "annual" ? "/yr" : "/mo";
+
+          return (
+            <div
+              key={plan.id}
+              className={`relative rounded-2xl border p-6 flex flex-col ${
+                plan.badge ? "border-accent/50 bg-accent/[0.06]" : "border-hairline bg-white/[0.03]"
+              }`}
+            >
+              {plan.badge && (
+                <span className="absolute -top-3 left-6 rounded-full bg-accent text-background text-xs font-semibold px-3 py-1">
+                  {plan.badge}
+                </span>
+              )}
+              <h3 className="text-xl font-semibold">{plan.name}</h3>
+              <p className="text-sm text-muted mt-1">{plan.tagline}</p>
+
+              <div className="mt-6">
+                <span className="text-3xl font-bold">{price}</span>
+                <span className="text-muted text-sm ml-1">{suffix}</span>
+              </div>
+              <p className="text-sm text-muted mt-1">{plan.users}</p>
+
+              {plan.includesPrevious && <p className="mt-4 text-xs text-accent">{plan.includesPrevious}</p>}
+
+              <ul className="mt-4 space-y-2 flex-1">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex gap-2 text-sm text-ink/80">
+                    <Check size={16} className="mt-0.5 shrink-0 text-accent" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <ButtonLink
+                href={plan.ctaHref}
+                variant={plan.badge ? "primary" : "outline"}
+                className="mt-6 w-full"
+              >
+                {plan.ctaLabel}
+              </ButtonLink>
+            </div>
+          );
+        })}
+      </section>
+
+      <section className="max-w-6xl mx-auto px-6 pb-24 overflow-x-auto">
+        <h2 className="text-2xl font-semibold mb-6">Compare plans</h2>
+        <table className="w-full text-sm border-collapse min-w-[720px]">
+          <thead>
+            <tr className="border-b border-hairline text-left">
+              <th className="py-3 pr-4 text-muted font-medium">Feature</th>
+              {PLANS.map((p) => (
+                <th key={p.id} className="py-3 px-4 font-semibold">
+                  {p.name}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {COMPARISON_ROWS.map((row) => (
+              <tr key={row.label} className="border-b border-white/5">
+                <td className="py-3 pr-4 text-ink/80">{row.label}</td>
+                {(["starter", "growth", "business", "enterprise"] as const).map((key) => {
+                  const val = row[key];
+                  return (
+                    <td key={key} className="py-3 px-4">
+                      {typeof val === "boolean" ? (
+                        val ? <Check size={16} className="text-accent" /> : <Minus size={16} className="text-muted/50" />
+                      ) : (
+                        <span className="text-ink/80">{val}</span>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    </main>
+  );
+}
